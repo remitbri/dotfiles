@@ -224,3 +224,26 @@ function o() {
 function tre() {
 	tree -aC -I '.git|node_modules|bower_components' --dirsfirst "$@" | less -FRNX;
 }
+
+# Generate Subresource Integrity hashes.
+# 1st argument is the filename.
+# 2nd argument, optional, is the hash algorithm
+# (currently the allowed prefixes are sha256, sha384, and sha512)
+# See http://www.w3.org/TR/SRI/ and
+# https://developer.mozilla.org/docs/Web/Security/Subresource_Integrity
+function sri() {
+	if [ -z "${1}" ]; then
+		echo "ERROR: No file specified.";
+		return 1;
+	fi;
+	local algorithm="${2:-sha512}"
+	if ! echo "${algorithm}" | egrep -q "^sha(256|384|512)$"; then
+		echo "ERROR: hash algorithm must be sha256, sha384 or sha512.";
+		return 1;
+	fi;
+	local filehash=$(openssl dgst "-${algorithm}" -binary "$1" | openssl base64 -A)
+	if [ -z "${filehash}" ]; then
+		return 1;
+	fi;
+	echo "${algorithm}-${filehash}";
+}
